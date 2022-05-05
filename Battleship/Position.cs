@@ -6,6 +6,7 @@
         public int Y { get; private set; }
 
         public bool IsTaken { get; private set; }
+        public bool IsShot { get; private set; }
 
         public ShipPart Occupant { get; private set; }
 
@@ -21,6 +22,15 @@
             IsTaken = false;
         }
 
+        public void Shoot()
+        {
+            if (IsTaken)
+            {
+                Occupant.Destroy();
+                Clear();
+            }
+            IsShot = true;
+        }
         public void SetPosition(int x, int y)
         {
             this.X = x;
