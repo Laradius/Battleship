@@ -12,6 +12,8 @@
         public static List<Position> WorldOnePositions { get; private set; } = new List<Position>();
         public static List<Position> WorldTwoPositions { get; private set; } = new List<Position>();
 
+        public static Random Rand = new();
+
 
 
 
@@ -69,7 +71,7 @@
 
                     if (p.IsTaken)
                     {
-                        world1 += p.Occupant.Ship.ShipType;
+                        world1 += p.Occupant!.Ship.ShipType;
                     }
                     else if (p.IsShot)
                     {
@@ -93,7 +95,7 @@
 
                     if (p.IsTaken)
                     {
-                        world2 += p.Occupant.Ship.ShipType;
+                        world2 += p.Occupant!.Ship.ShipType;
                     }
                     else if (p.IsShot)
                     {
@@ -112,6 +114,7 @@
 
         public static Position GetPosition(int x, int y, bool world1)
         {
+
             List<Position> positions;
 
             if (world1)
@@ -123,11 +126,11 @@
                 positions = WorldTwoPositions;
             }
 
-            Position position = positions.Find(p => p.X == x && p.Y == y);
+            Position? position = positions.Find(p => p.X == x && p.Y == y);
 
             if (position == null)
             {
-                throw new InvalidOperationException("Position is out of world bounds.");
+                throw new InvalidOperationException("Position is out of world bounds." + x + y);
             }
             else
             {
@@ -142,8 +145,162 @@
             throw new NotImplementedException();
         }
 
-        public static void AddShip(Ship ship)
+
+
+
+        public static bool AddShipToWorld(bool world1, Ship ship)
         {
+
+            bool canAddShip = false;
+
+
+
+
+
+
+
+            while (!canAddShip && ship.ChangeOrientation())
+            {
+
+                List<Grid> grid = Grid.GetGrid(WorldSizeX, WorldSizeY);
+
+                Grid possibleElement;
+
+                while (grid.Count > 0 && !canAddShip)
+                {
+
+                    possibleElement = grid[Rand.Next(grid.Count)];
+
+                    Position pos = GetPosition(possibleElement.X, possibleElement.Y, world1);
+
+                    if (ship.Orientation == CreationOrientation.Left)
+                    {
+                        if (!OutOfBounds(pos.X - ship.Length, pos.Y))
+                        {
+
+                            for (int i = 0; i < ship.Length; i++)
+                            {
+                                ship.ShipParts[i].SetPosition(pos.X - i, pos.Y);
+
+                                if (pos.X - i < 0)
+                                {
+                                    throw new Exception();
+                                }
+                            }
+
+                            canAddShip = true;
+                            break;
+                        }
+                        else
+                        {
+                            grid.Remove(possibleElement);
+                            continue;
+                        }
+                    }
+                    else if (ship.Orientation == CreationOrientation.Right)
+                    {
+                        if (!OutOfBounds(pos.X + ship.Length, pos.Y))
+                        {
+                            for (int i = 0; i < ship.Length; i++)
+                            {
+                                if (pos.X + i > 9)
+                                {
+                                    throw new Exception();
+                                }
+                                ship.ShipParts[i].SetPosition(pos.X + i, pos.Y);
+                            }
+
+                            canAddShip = true;
+                            break;
+                        }
+                        else
+                        {
+                            grid.Remove(possibleElement);
+                            continue;
+                        }
+                    }
+                    else if (ship.Orientation == CreationOrientation.Top)
+                    {
+
+                        if (!OutOfBounds(pos.X, pos.Y - ship.Length))
+                        {
+                            for (int i = 0; i < ship.Length; i++)
+                            {
+                                if (pos.Y - i < 0)
+                                {
+                                    throw new Exception();
+                                }
+                                ship.ShipParts[i].SetPosition(pos.X, pos.Y - i);
+                            }
+
+                            canAddShip = true;
+                            break;
+                        }
+                        else
+                        {
+                            grid.Remove(possibleElement);
+                            continue;
+                        }
+
+                    }
+                    else
+                    {
+                        if (!OutOfBounds(pos.X, pos.Y + ship.Length))
+                        {
+                            for (int i = 0; i < ship.Length; i++)
+                            {
+                                if (pos.Y + i < 0)
+                                {
+                                    throw new Exception();
+                                }
+                                ship.ShipParts[i].SetPosition(pos.X, pos.Y + i);
+                            }
+
+                            canAddShip = true;
+                            break;
+                        }
+                        else
+                        {
+                            grid.Remove(possibleElement);
+                            continue;
+                        }
+                    }
+
+
+                }
+            }
+            if (canAddShip)
+            {
+                AddShip(ship, world1);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool OutOfBounds(int x, int y)
+        {
+            if (x < 0 || y < 0 || x > WorldSizeX - 1 || y > WorldSizeY - 1)
+            {
+                return true;
+            }
+            return false;
+        }
+
+
+
+        private static void AddShip(Ship ship, bool world1)
+        {
+
+
+
+            for (int i = 0; i < ship.ShipParts.Length; i++)
+            {
+                GetPosition(ship.ShipParts[i].Position!.X, ship.ShipParts[i].Position!.Y, world1).Take(ship.ShipParts[i]);
+            }
+
+
+
+
             Ships.Add(ship);
         }
 
@@ -151,8 +308,5 @@
         {
             Ships.Remove(ship);
         }
-
-
-
     }
 }

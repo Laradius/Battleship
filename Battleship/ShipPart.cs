@@ -4,7 +4,7 @@
     {
         public bool IsDestroyed { get; private set; } = false;
         public Ship Ship { get; private set; }
-        public Position Position { get; private set; }
+        public Position? Position { get; private set; }
 
 
         public ShipPart(Ship ship)
@@ -19,7 +19,15 @@
 
         public void SetPosition(int x, int y)
         {
-            Position.SetPosition(x, y);
+
+            if (Position == null)
+            {
+                Position = new Position(x, y);
+            }
+            else
+            {
+                Position.SetPosition(x, y);
+            }
         }
     }
 }

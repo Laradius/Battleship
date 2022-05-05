@@ -2,6 +2,15 @@
 
 ## Changelog:
 
+### 0.5
+Todo: Modify adding ships by free positions so that they cannot neighbour with each other.
+
+* More GameManager functionallity (Adding ships by free position)
+* Minor Ship, ShipPart and Position changes
+* Added Grid class
+* Added PatrolBoat class
+* Added CreationOrientation enum
+
 ### 0.3
 * More GameManager functionallity (creating worlds, drawing worlds)
 * Minor ShipPart and Position changes
