@@ -1,9 +1,25 @@
 ﻿namespace Battleship
 {
-    internal struct Position
+    internal class Position
     {
         public int X { get; private set; }
         public int Y { get; private set; }
+
+        public bool IsTaken { get; private set; }
+
+        public ShipPart Occupant { get; private set; }
+
+        public void Take(ShipPart ship)
+        {
+            this.Occupant = ship;
+            IsTaken = true;
+        }
+
+        public void Clear()
+        {
+            Occupant = null;
+            IsTaken = false;
+        }
 
         public void SetPosition(int x, int y)
         {
