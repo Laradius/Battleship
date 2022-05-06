@@ -1,6 +1,21 @@
 # Battleship
 
+##Description:
+
+Battleship simulation between randomly shooting battleships.
+
+Press any key to proceed to next turn.
+
 ## Changelog:
+
+## 1.0
+* Code Cleanup
+* Ships Added
+* Shooting logic
+* Turn logic
+* Win/Lose Conditions
+* Bug fixes where ships could stack on each other
+
 
 
 ### 0.7
