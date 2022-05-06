@@ -5,7 +5,8 @@
         public int X { get; private set; }
         public int Y { get; private set; }
 
-        public bool IsTaken { get; private set; }
+
+        public bool IsTaken { get; private set; } = false;
         public bool IsShot { get; private set; }
 
         public ShipPart? Occupant { get; private set; }

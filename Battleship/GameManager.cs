@@ -9,8 +9,9 @@
         public static int WorldSizeY { get; private set; }
 
         public static List<Ship> Ships { get; private set; } = new List<Ship>();
-        public static List<Position> WorldOnePositions { get; private set; } = new List<Position>();
-        public static List<Position> WorldTwoPositions { get; private set; } = new List<Position>();
+
+        public static List<List<Position>> Worlds { get; private set; } = new List<List<Position>>()
+        { new List<Position>(), new List<Position>() };
 
         public static Random Rand = new();
 
@@ -27,26 +28,20 @@
                 WorldSizeX = sizeX;
                 WorldSizeY = sizeY;
 
-                for (int y = 0; y < WorldSizeY; y++)
-                {
-                    for (int x = 0; x < WorldSizeX; x++)
+                for (int i = 0; i < Worlds.Count; i++)
+                    for (int y = 0; y < WorldSizeY; y++)
                     {
-                        WorldOnePositions.Add(new Position(x, y));
+                        for (int x = 0; x < WorldSizeX; x++)
+                        {
+                            Worlds[i].Add(new Position(x, y));
+                        }
                     }
-                }
-                for (int y = 0; y < WorldSizeY; y++)
-                {
-                    for (int x = 0; x < WorldSizeX; x++)
-                    {
-                        WorldTwoPositions.Add(new Position(x, y));
 
-                    }
-                }
                 _isInitialized = true;
             }
             else
             {
-                throw new InvalidOperationException("World is already initialized.");
+                throw new InvalidOperationException("Worlds are already initialized.");
             }
         }
 
@@ -59,74 +54,70 @@
                 throw new InvalidOperationException("Wolrd is not initialized.");
             }
 
-            string world1 = "World 1:" + Environment.NewLine;
-            string world2 = "World 2:" + Environment.NewLine;
+            string worlds = "";
 
-            for (int y = 0; y < WorldSizeY; y++)
+
+
+
+
+            for (int i = 0; i < Worlds.Count; i++)
             {
+                worlds += $"World {i + 1}: {Environment.NewLine}";
                 for (int x = 0; x < WorldSizeX; x++)
                 {
-
-                    Position p = GetPosition(x, y, true);
-
-                    if (p.IsTaken)
+                    for (int y = 0; y < WorldSizeY; y++)
                     {
-                        world1 += p.Occupant!.Ship.ShipType;
-                    }
-                    else if (p.IsShot)
-                    {
-                        world1 += "#";
-                    }
-                    else
-                    {
-                        world1 += "*";
-                    }
 
+
+                        Position p = GetPosition(x, y, i);
+
+
+                        if (p.IsTaken)
+                        {
+                            worlds += p.Occupant.Ship.ShipType;
+                        }
+
+                        else if (p.IsShot)
+                        {
+                            worlds += "#";
+                        }
+
+                        else
+                        {
+                            worlds += "*";
+                        }
+
+
+
+                    }
+                    worlds += Environment.NewLine;
                 }
-                world1 += Environment.NewLine;
+                worlds += Environment.NewLine;
+
             }
 
-            for (int y = 0; y < WorldSizeY; y++)
+            worlds += $"Ship count: {Ships.Count} {Environment.NewLine}";
+
+            int shipCount = 0;
+
+            foreach (Ship ship in Ships)
             {
-                for (int x = 0; x < WorldSizeX; x++)
+                foreach (ShipPart p in ship.ShipParts)
                 {
-
-                    Position p = GetPosition(x, y, false);
-
-                    if (p.IsTaken)
-                    {
-                        world2 += p.Occupant!.Ship.ShipType;
-                    }
-                    else if (p.IsShot)
-                    {
-                        world2 += "#";
-                    }
-                    else
-                    {
-                        world2 += "*";
-                    }
-
+                    shipCount++;
                 }
-                world2 += Environment.NewLine;
             }
-            return world1 + world2;
+
+            worlds += $"Remaining ShipParts: {shipCount}";
+
+            return worlds;
         }
 
-        public static Position GetPosition(int x, int y, bool world1)
+        public static Position GetPosition(int x, int y, int world)
         {
 
-            List<Position> positions;
 
-            if (world1)
-            {
-                positions = WorldOnePositions;
-            }
-            else
-            {
-                positions = WorldTwoPositions;
-            }
-
-            Position? position = positions.Find(p => p.X == x && p.Y == y);
+            Position? position = Worlds[world].Find(p => p.X == x && p.Y == y);
 
             if (position == null)
             {
@@ -148,7 +139,7 @@
 
 
 
-        public static bool AddShipToWorld(bool world1, Ship ship)
+        public static bool AddShipToWorld(int world, Ship ship)
         {
 
             bool canAddShip = false;
@@ -171,16 +162,20 @@
 
                     possibleElement = grid[Rand.Next(grid.Count)];
 
-                    Position pos = GetPosition(possibleElement.X, possibleElement.Y, world1);
+                    Position pos = GetPosition(possibleElement.X, possibleElement.Y, world);
 
                     if (ship.Orientation == CreationOrientation.Left)
                     {
-                        if (!OutOfBounds(pos.X - ship.Length, pos.Y))
+                        if (!pos.IsTaken && !OutOfBounds(pos.X - ship.Length, pos.Y) && !ScanForNeighbour(world, ship, pos, ship.Orientation))
                         {
+
+
+                            //Get [Right, Top, Bottom], [Top, Bottom] [Top, Bottom, Left]
+
 
                             for (int i = 0; i < ship.Length; i++)
                             {
-                                ship.ShipParts[i].SetPosition(pos.X - i, pos.Y);
+                                ship.ShipParts[i].SetPosition(GetPosition(pos.X - i, pos.Y, world));
 
                                 if (pos.X - i < 0)
                                 {
@@ -199,7 +194,7 @@
                     }
                     else if (ship.Orientation == CreationOrientation.Right)
                     {
-                        if (!OutOfBounds(pos.X + ship.Length, pos.Y))
+                        if (!pos.IsTaken && !OutOfBounds(pos.X + ship.Length, pos.Y) && !ScanForNeighbour(world, ship, pos, ship.Orientation))
                         {
                             for (int i = 0; i < ship.Length; i++)
                             {
@@ -207,7 +202,7 @@
                                 {
                                     throw new Exception();
                                 }
-                                ship.ShipParts[i].SetPosition(pos.X + i, pos.Y);
+                                ship.ShipParts[i].SetPosition(GetPosition(pos.X + i, pos.Y, world));
                             }
 
                             canAddShip = true;
@@ -222,7 +217,7 @@
                     else if (ship.Orientation == CreationOrientation.Top)
                     {
 
-                        if (!OutOfBounds(pos.X, pos.Y - ship.Length))
+                        if (!pos.IsTaken && !OutOfBounds(pos.X, pos.Y - ship.Length) && !ScanForNeighbour(world, ship, pos, ship.Orientation))
                         {
                             for (int i = 0; i < ship.Length; i++)
                             {
@@ -230,7 +225,7 @@
                                 {
                                     throw new Exception();
                                 }
-                                ship.ShipParts[i].SetPosition(pos.X, pos.Y - i);
+                                ship.ShipParts[i].SetPosition(GetPosition(pos.X, pos.Y - i, world));
                             }
 
                             canAddShip = true;
@@ -245,7 +240,7 @@
                     }
                     else
                     {
-                        if (!OutOfBounds(pos.X, pos.Y + ship.Length))
+                        if (!pos.IsTaken && !OutOfBounds(pos.X, pos.Y + ship.Length) && !ScanForNeighbour(world, ship, pos, ship.Orientation))
                         {
                             for (int i = 0; i < ship.Length; i++)
                             {
@@ -253,7 +248,7 @@
                                 {
                                     throw new Exception();
                                 }
-                                ship.ShipParts[i].SetPosition(pos.X, pos.Y + i);
+                                ship.ShipParts[i].SetPosition(GetPosition(pos.X, pos.Y + i, world));
                             }
 
                             canAddShip = true;
@@ -271,10 +266,258 @@
             }
             if (canAddShip)
             {
-                AddShip(ship, world1);
+                AddShip(ship, world);
                 return true;
             }
+            Console.WriteLine("didint add ship");
             return false;
+        }
+
+        private static bool ScanForNeighbour(int world, Ship ship, Position pos, CreationOrientation orientation)
+        {
+            bool neighbourFound = false;
+
+
+            if (orientation == CreationOrientation.Right)
+            {
+
+
+                for (int i = 0; i < ship.Length + 2; i++)
+                {
+                    //Scan Bottom
+
+                    if (!OutOfBounds(pos.X - 1 + i, pos.Y - 1))
+                    {
+
+
+                        if (GetPosition(pos.X - 1 + i, pos.Y - 1, world).IsTaken)
+                        {
+                            neighbourFound = true;
+                        }
+
+                    }
+
+                    //Scan Top
+
+
+                    if (!OutOfBounds(pos.X - 1 + i, pos.Y + 1))
+                    {
+
+
+
+                        if (GetPosition(pos.X - 1 + i, pos.Y + 1, world).IsTaken)
+                        {
+                            neighbourFound = true;
+                        }
+                    }
+
+                }
+                // Scan Left
+                if (!OutOfBounds(pos.X - 1, pos.Y))
+                {
+
+                    if (GetPosition(pos.X - 1, pos.Y, world).IsTaken)
+                    {
+                        neighbourFound = true;
+                    }
+                }
+                // Scan Right
+                if (!OutOfBounds(pos.X + ship.Length, pos.Y))
+                {
+
+
+                    if (GetPosition(pos.X + ship.Length, pos.Y, world).IsTaken)
+                    {
+                        neighbourFound = true;
+                    }
+                }
+
+
+            }
+
+            else if (orientation == CreationOrientation.Left)
+            {
+
+                for (int i = 0; i < ship.Length + 2; i++)
+                {
+                    //Scan Bottom
+
+                    if (!OutOfBounds(pos.X + 1 - i, pos.Y - 1))
+                    {
+
+
+
+
+                        if (GetPosition(pos.X + 1 - i, pos.Y - 1, world).IsTaken)
+                        {
+                            neighbourFound = true;
+                        }
+
+                    }
+
+                    //Scan Top
+
+
+                    if (!OutOfBounds(pos.X + 1 - i, pos.Y + 1))
+                    {
+
+
+
+                        if (GetPosition(pos.X + 1 - i, pos.Y + 1, world).IsTaken)
+                        {
+                            neighbourFound = true;
+                        }
+                    }
+
+                }
+                // Scan Right
+                if (!OutOfBounds(pos.X + 1, pos.Y))
+                {
+
+
+                    if (GetPosition(pos.X + 1, pos.Y, world).IsTaken)
+                    {
+                        neighbourFound = true;
+                    }
+                }
+                // Scan Left
+                if (!OutOfBounds(pos.X - ship.Length, pos.Y))
+                {
+
+
+                    if (GetPosition(pos.X - ship.Length, pos.Y, world).IsTaken)
+                    {
+                        neighbourFound = true;
+                    }
+                }
+            }
+            else if (orientation == CreationOrientation.Top)
+            {
+
+
+                for (int i = 0; i < ship.Length + 2; i++)
+                {
+                    //Scan Right
+
+                    if (!OutOfBounds(pos.X + 1, pos.Y + 1 - i))
+                    {
+
+
+
+
+                        if (GetPosition(pos.X + 1, pos.Y + 1 - i, world).IsTaken)
+                        {
+                            neighbourFound = true;
+                        }
+
+                    }
+
+                    //Scan Left
+
+
+                    if (!OutOfBounds(pos.X - 1, pos.Y + 1 - i))
+                    {
+
+
+
+
+                        if (GetPosition(pos.X - 1, pos.Y + 1 - i, world).IsTaken)
+                        {
+                            neighbourFound = true;
+                        }
+
+                    }
+
+                }
+                // Scan Top
+                if (!OutOfBounds(pos.X, pos.Y + 1))
+                {
+
+                    if (GetPosition(pos.X, pos.Y + 1, world).IsTaken)
+                    {
+                        neighbourFound = true;
+                    }
+                }
+                // Scan Bottom
+                if (!OutOfBounds(pos.X, pos.Y - ship.Length))
+                {
+
+                    if (GetPosition(pos.X, pos.Y - ship.Length, world).IsTaken)
+                    {
+                        neighbourFound = true;
+                    }
+                }
+
+
+
+
+            }
+
+
+            else if (orientation == CreationOrientation.Bottom)
+            {
+
+
+                for (int i = 0; i < ship.Length + 2; i++)
+                {
+                    //Scan Right
+
+                    if (!OutOfBounds(pos.X + 1, pos.Y - 1 + i))
+                    {
+
+
+
+
+                        if (GetPosition(pos.X + 1, pos.Y - 1 + i, world).IsTaken)
+                        {
+                            neighbourFound = true;
+                        }
+
+                    }
+
+                    //Scan Left
+
+
+                    if (!OutOfBounds(pos.X - 1, pos.Y - 1 + i))
+                    {
+
+
+                        if (GetPosition(pos.X - 1, pos.Y - 1 + i, world).IsTaken)
+                        {
+                            neighbourFound = true;
+                        }
+
+                    }
+
+                }
+                // Scan Top
+                if (!OutOfBounds(pos.X, pos.Y - 1))
+                {
+
+
+                    if (GetPosition(pos.X, pos.Y - 1, world).IsTaken)
+                    {
+                        neighbourFound = true;
+                    }
+                }
+                // Scan Bottom
+                if (!OutOfBounds(pos.X, pos.Y + ship.Length))
+                {
+
+
+                    if (GetPosition(pos.X, pos.Y + ship.Length, world).IsTaken)
+                    {
+                        neighbourFound = true;
+                    }
+                }
+
+
+
+
+            }
+
+
+            return neighbourFound;
         }
 
         public static bool OutOfBounds(int x, int y)
@@ -288,19 +531,10 @@
 
 
 
-        private static void AddShip(Ship ship, bool world1)
+
+
+        private static void AddShip(Ship ship, int world)
         {
-
-
-
-            for (int i = 0; i < ship.ShipParts.Length; i++)
-            {
-                GetPosition(ship.ShipParts[i].Position!.X, ship.ShipParts[i].Position!.Y, world1).Take(ship.ShipParts[i]);
-            }
-
-
-
-
             Ships.Add(ship);
         }
 

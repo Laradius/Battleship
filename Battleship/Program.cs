@@ -4,6 +4,9 @@ GameManager.MakeWorlds(10, 10);
 
 
 for (int i = 0; i < 10; i++)
-    GameManager.AddShipToWorld(false, new PatrolBoat());
+    GameManager.AddShipToWorld(0, new PatrolBoat());
 
-Console.WriteLine(GameManager.DrawWorlds());
+
+string world = GameManager.DrawWorlds();
+
+Console.Write(world);

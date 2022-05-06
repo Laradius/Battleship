@@ -2,6 +2,15 @@
 
 ## Changelog:
 
+
+### 0.7
+Todo: Add remaining ships, implement remaining shooting logic
+
+* Major GameManager functionallity change (Adding ships that cannot collide with each other)
+* Rewrote logic for drawing worlds, code cleanup
+* Changes in ShipPart SetPositon so it points to GameManeger world position
+
+
 ### 0.5
 Todo: Modify adding ships by free positions so that they cannot neighbour with each other.
 

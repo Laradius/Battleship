@@ -9,25 +9,26 @@
 
         public ShipPart(Ship ship)
         {
+
             this.Ship = ship;
         }
 
+
+        public void SetPosition(Position pos)
+        {
+
+
+            this.Position = pos;
+
+
+
+            pos.Take(this);
+        }
         public void Destroy()
         {
             IsDestroyed = true;
         }
 
-        public void SetPosition(int x, int y)
-        {
 
-            if (Position == null)
-            {
-                Position = new Position(x, y);
-            }
-            else
-            {
-                Position.SetPosition(x, y);
-            }
-        }
     }
 }
