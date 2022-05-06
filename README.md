@@ -1,6 +1,6 @@
 # Battleship
 
-##Description:
+## Description:
 
 Battleship simulation between randomly shooting battleships.
 
