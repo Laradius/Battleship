@@ -3,6 +3,9 @@
     internal abstract class Ship
     {
 
+
+        public bool Sunk { get; protected set; } = false;
+
         public int Length { get; protected set; }
         public char ShipType { get; protected set; }
 
@@ -23,6 +26,15 @@
 
         }
 
+
+        public void RemoveShipPart(ShipPart part)
+        {
+
+            ShipParts = ShipParts.Where((p) => p.Position != part.Position).ToArray();
+
+
+        }
+
         public bool ChangeOrientation()
         {
             if (CreationOrientations.Count > 0)
@@ -37,12 +49,19 @@
             }
         }
 
+
+        public virtual void KillShip()
+        {
+            Sunk = true;
+
+        }
         protected virtual void ConstructShip()
         {
 
             for (int i = 0; i < Length; i++)
             {
                 ShipParts[i] = new ShipPart(this);
+
             }
 
         }

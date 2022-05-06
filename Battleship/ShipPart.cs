@@ -27,6 +27,14 @@
         public void Destroy()
         {
             IsDestroyed = true;
+
+            Ship.RemoveShipPart(this);
+
+
+            if (Ship.ShipParts.Length < 1)
+            {
+                Ship.KillShip();
+            }
         }
 
 

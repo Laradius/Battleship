@@ -13,22 +13,22 @@
 
         public void Take(ShipPart ship)
         {
+
+            if (IsTaken)
+            {
+                Console.WriteLine("Ship inside ship");
+            }
             this.Occupant = ship;
             IsTaken = true;
         }
 
-        public void Clear()
-        {
-            Occupant = null;
-            IsTaken = false;
-        }
+
 
         public void Shoot()
         {
             if (IsTaken)
             {
                 Occupant!.Destroy();
-                Clear();
             }
             IsShot = true;
         }

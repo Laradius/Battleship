@@ -1,11 +1,11 @@
 ﻿namespace Battleship
 {
-    internal class PatrolBoat : Ship
+    internal class Cruiser : Ship
     {
 
-        public PatrolBoat() : base()
+        public Cruiser() : base()
         {
-            Length = 2;
+            Length = 3;
             ShipType = 'P';
             ShipParts = new ShipPart[Length];
             ConstructShip();
